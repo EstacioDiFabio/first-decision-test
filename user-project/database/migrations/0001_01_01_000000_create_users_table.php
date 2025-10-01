@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name', 50);
             $table->string('email')->unique();
-            $table->string('password', 20);
+            $table->string('password', 255);
+            $table->timestamps();
         });
 
         Schema::create('sessions', function (Blueprint $table) {

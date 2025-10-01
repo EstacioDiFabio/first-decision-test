@@ -6,27 +6,14 @@
 <div class="min-h-screen flex items-center justify-center bg-gray-100">
     <div class="bg-white p-8 rounded-lg shadow-md w-half max-w-md">
         <h2 class="text-2xl font-bold mb-6 text-center">Cadastro de Usuário</h2>
-        @if(session('success'))
-            <div class="mb-4 p-2 bg-green-100 text-green-800 rounded">
-                {{ session('success') }}
-            </div>
-        @endif
-        @if ($errors->any())
-            <div class="mb-4 p-2 bg-red-100 text-red-800 rounded">
-                <ul class="list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+
         <form id="form" action="/api/users" method="POST" class="space-y-4">
-            @csrf
+            <meta name="csrf-token" content="{{ csrf_token() }}">
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-700">Nome</label>
                 <input type="text" id="name" name="name" value="{{ old('name') }}" required
                         minlength="3" maxlength="50"
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                       class="@error('name') is-invalid @enderror mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
             </div>
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
@@ -55,34 +42,107 @@
     </div>
 </div>
 <script>
+
+/**
+ * Classe Form
+ * Valida as entradas e envia a requisição
+*/
 class Form {
+
     init() {
-        this.validate();
+        this.send();
     }
 
-    validate() {
+    send() {
         var button = document.querySelector('#form-submit');
         var self = this;
 
         button.addEventListener('click', function(event) {
-            self._validateField('name', 'Nome', 3, 50);
-            self._validateEmail();
-            self._validateField('password', 'Senha', 6, 20);
-            self._validateField('password_confirmation', 'Confirmação de Senha', 6, 20);
-            self._checkPasswords();
+            event.preventDefault();
+            self._validate();
+            self._fetch();
         })
+    }
+
+    _validate() {
+        var validateClass = new FormValidation();
+        validateClass.run();
+
+        if (validateClass.getErrors()) {
+            alert(validateClass.errorsTemplate())
+        }
+    }
+
+    _fetch() {
+        var token = document.querySelector('meta[name="csrf-token"]')
+
+        fetch('/api/user', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                'X-CSRF-TOKEN': token.getAttribute('content')
+            },
+            body: JSON.stringify(this._formData())
+        })
+        .then(async res => {
+            let data = await res.json();
+
+            if (!res.ok) {
+                console.error("Erro:", data.errors);
+            }
+
+            return data;
+        })
+        .then(data => {
+            alert(data.message)
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+        });
+    }
+
+    _formData() {
+
+        return {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            password_confirmation: document.getElementById('password_confirmation').value,
+        }
+    }
+}
+
+/**
+ * Classe FormValidation
+ * Valida as entradas
+*/
+class FormValidation {
+
+    constructor() {
+        this.errors = [];
+    }
+
+    run() {
+        this.errors = [];
+
+        this._validateField('name', 'Nome', 3, 50);
+        this._validateEmail();
+        this._validateField('password', 'Senha', 6, 20);
+        this._validateField('password_confirmation', 'Confirmação de Senha', 6, 20);
+        this._checkPasswords();
     }
 
     _validateField(fieldId, fieldName, minlength, maxlength) {
         var field = document.getElementById(fieldId);
 
         if (field.value.trim() == '') {
-            alert('O campo '+fieldName+' não pode ficar em branco');
+            this.errors.push('O campo '+fieldName+' não pode ficar em branco');
         } else if (field.value.trim().length < minlength ) {
-            alert('O campo '+fieldName+' não pode conter menos que '+minlength+' caracteres');
+            this.errors.push('O campo '+fieldName+' não pode conter menos que '+minlength+' caracteres')
         }
         if (field.value.trim().length > maxlength) {
-            alert('O campo '+fieldName+' não pode conter mais do que '+maxlength+' caracteres');
+            this.errros.push('O campo '+fieldName+' não pode conter mais do que '+maxlength+' caracteres')
         }
     }
 
@@ -91,21 +151,33 @@ class Form {
         var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         if (email.value.trim() == '') {
-            alert('O campo e-mail não pode ficar em branco');
+            this.errors.push('O campo e-mail não pode ficar em branco');
         } else if (!emailPattern.test(email.value.trim())) {
-            alert('O campo e-mail não possui um valor válido.');
+            this.errors.push('O campo e-mail não possui um valor válido.');
         }
     }
 
     _checkPasswords() {
-        var password = document.getElementById("password");
-        var password_confirmation = document.getElementById("password_confirmation");
+        var password = document.getElementById('password');
+        var password_confirmation = document.getElementById('password_confirmation');
 
         if (password_confirmation.value !== password.value) {
-            alert('As senhas devem ser preenchidas com o mesmo valor.');
+            this.errors.push('As senhas devem ser preenchidas com o mesmo valor.');
         }
     }
+
+    getErrors() {
+
+        return this.errors.length > 0;
+    }
+
+    errorsTemplate() {
+
+        return this.errors.map((error, i) => `${i + 1}. ${error}`).join('\n');
+    }
+
 }
+
 window.addEventListener('load', function() {
     (new Form()).init();
 })
