@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
+use App\Http\Controllers\Web\UserController;
 
-    return view('user');
-});
+Route::get('/', [UserController::class, 'create'])->name('create');
+Route::post('/user', [UserController::class, 'store'])->name('store');

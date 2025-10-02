@@ -9,12 +9,18 @@ use App\Exceptions\UserValidation;
 
 class UserService {
 
+    /**
+     * @var UserRepository
+     */
     protected $userRepository;
 
     public function __construct(UserRepository $userRepository) {
         $this->userRepository = $userRepository;
     }
 
+    /**
+     * @param Request $request
+     */
     public function createUser(Request $request) {
         $validator = Validator::make($request->all(), [
             'name'     => ['required', 'string', 'min:3','max:50'],

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -18,19 +18,26 @@ class UserController extends Controller {
     }
 
     /**
-     * @param Request $requeset
+     *
+     */
+    public function create() {
+
+        return view('user');
+    }
+
+    /**
+     * @param Request $request
      */
     public function store(Request $request) {
         try {
             $this->userService->createUser($request);
+
+            return redirect()->route('create')
+                ->with('success', 'Usuário cadastrado com sucesso!');
         } catch (UserValidation $e) {
-
-            return $this->returnValidationErors($e->getErrors());
+            return back()->withErrors($e->getErrors())->withInput();
         } catch (Exception $e) {
-
-            return $this->returnErrors($e->getMessage());
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
         }
-
-        return $this->returnSuccess();
     }
 }

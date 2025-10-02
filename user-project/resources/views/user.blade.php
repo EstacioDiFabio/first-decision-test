@@ -2,46 +2,71 @@
 @section('title', 'Cadastro de Usuário')
 
 @section('content')
-
 <div class="min-h-screen flex items-center justify-center bg-gray-100">
     <div class="bg-white p-8 rounded-lg shadow-md w-half max-w-md">
         <h2 class="text-2xl font-bold mb-6 text-center">Cadastro de Usuário</h2>
 
-        <form id="form" class="space-y-4">
-            <meta name="csrf-token" content="{{ csrf_token() }}">
-            <div>
-                <label for="name" class="block text-sm font-medium text-gray-700">Nome</label>
-                <input type="text" id="name" name="name" value="{{ old('name') }}" required
-                        minlength="3" maxlength="50"
-                       class="@error('name') is-invalid @enderror mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+        @if(session('success'))
+            <div class="bg-green-100 text-green-700 p-2 rounded mb-4">
+                {{ session('success') }}
             </div>
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
-                <input type="email" id="email" name="email" value="{{ old('email') }}" required
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+        @endif
+
+        @if($errors->has('error'))
+            <div class="bg-red-100 text-red-700 p-2 rounded mb-4">
+                {{ $errors->first('error') }}
             </div>
+        @endif
+
+        <form id="form-submit"
+            action="{{ route('store') }}" method="POST"
+            class="space-y-4">
+            @csrf
             <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
-                <input type="password" id="password" name="password" required
-                        minlength="6" maxlength="20"
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                <label for="name">Nome</label>
+                <input type="text" id="name" name="name" value="{{ old('name') }}"
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm @error('name') border-red-500 @enderror">
+                @error('name')
+                    <span class="text-red-600 text-sm">{{ $message }}</span>
+                @enderror
             </div>
+
             <div>
-                <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirmação de Senha</label>
-                <input type="password" id="password_confirmation" name="password_confirmation" required
-                        minlength="6" maxlength="20"
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                <label for="email">E-mail</label>
+                <input type="text" id="email" name="email" value="{{ old('email') }}"
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm @error('email') border-red-500 @enderror">
+                @error('email')
+                    <span class="text-red-600 text-sm">{{ $message }}</span>
+                @enderror
             </div>
+
             <div>
-                <button id="form-submit" type="submit"
-                        class="w-full bg-blue-500 text-black py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors">
-                    Cadastrar
-                </button>
+                <label for="password">Senha</label>
+                <input type="password" id="password" name="password"
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm @error('password') border-red-500 @enderror">
+                @error('password')
+                    <span class="text-red-600 text-sm">{{ $message }}</span>
+                @enderror
             </div>
+
+            <div>
+                <label for="password_confirmation">Confirmação de Senha</label>
+                <input type="password" id="password_confirmation" name="password_confirmation"
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-blue-500 text-black py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors">
+                Cadastrar
+            </button>
         </form>
     </div>
 </div>
 <script>
+
+window.addEventListener('load', function() {
+    (new Form()).init();
+})
 
 /**
  * Classe Form
@@ -50,7 +75,24 @@
 class Form {
 
     init() {
-        this.send();
+        // descomentar para enviar os dados via api
+        // remover os atributos action e method do <form> também
+
+        // this.send();
+
+        // this.mock();
+    }
+
+    mock() {
+        var name = document.getElementById('name');
+        var email = document.getElementById('email');
+        var password = document.getElementById('password');
+        var password_confirmation = document.getElementById('password_confirmation');
+
+        name.value = (Math.random() + 1).toString(36).substring(7);
+        email.value = (Math.random() + 1).toString(36).substring(7)+'@firstdecision.com.br';
+        password.value = 'teste123';
+        password_confirmation.value = 'teste123';
     }
 
     send() {
@@ -80,14 +122,13 @@ class Form {
     }
 
     _fetch() {
-        var token = document.querySelector('meta[name="csrf-token"]')
 
         fetch('/api/user', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                'X-CSRF-TOKEN': token.getAttribute('content')
+                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
             },
             body: JSON.stringify(this._formData())
         })
@@ -104,6 +145,7 @@ class Form {
             } else {
                 alert(data.message);
                 this._formReset();
+                this.mock();
             }
         })
         .catch(error => {
@@ -194,8 +236,5 @@ class FormValidation {
 
 }
 
-window.addEventListener('load', function() {
-    (new Form()).init();
-})
 </script>
 @endsection
