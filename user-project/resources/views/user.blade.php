@@ -7,7 +7,7 @@
     <div class="bg-white p-8 rounded-lg shadow-md w-half max-w-md">
         <h2 class="text-2xl font-bold mb-6 text-center">Cadastro de Usuário</h2>
 
-        <form id="form" action="/api/users" method="POST" class="space-y-4">
+        <form id="form" class="space-y-4">
             <meta name="csrf-token" content="{{ csrf_token() }}">
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-700">Nome</label>
@@ -59,18 +59,24 @@ class Form {
 
         button.addEventListener('click', function(event) {
             event.preventDefault();
-            self._validate();
-            self._fetch();
+
+            if (self._validate()) {
+                self._fetch();
+            }
         })
     }
 
     _validate() {
         var validateClass = new FormValidation();
         validateClass.run();
+        var pass = true;
 
         if (validateClass.getErrors()) {
             alert(validateClass.errorsTemplate())
+            pass = false;
         }
+
+        return pass;
     }
 
     _fetch() {
@@ -86,16 +92,19 @@ class Form {
             body: JSON.stringify(this._formData())
         })
         .then(async res => {
-            let data = await res.json();
 
-            if (!res.ok) {
-                console.error("Erro:", data.errors);
-            }
-
-            return data;
+            return await res.json();
         })
         .then(data => {
-            alert(data.message)
+            if (data.validationErrors) {
+                alert(data.validationErrors);
+            } else if (data.errors) {
+                alert('Um erro ocorreu.');
+                console.error(data.errors)
+            } else {
+                alert(data.message);
+                this._formReset();
+            }
         })
         .catch(error => {
             console.error('Erro:', error);
@@ -110,6 +119,13 @@ class Form {
             password: document.getElementById('password').value,
             password_confirmation: document.getElementById('password_confirmation').value,
         }
+    }
+
+    _formReset() {
+        document.getElementById('name').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('password_confirmation').value = '';
     }
 }
 

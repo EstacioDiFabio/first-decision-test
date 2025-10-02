@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\UserService;
-use Illuminate\Support\Facades\Validator;
+use App\Exceptions\UserValidation;
+use Exception;
 
 class UserController extends Controller {
 
@@ -17,40 +18,27 @@ class UserController extends Controller {
     }
 
     public function store(Request $request) {
-        $validator = Validator::make($request->all(), [
-            'name'     => ['required', 'string', 'min:3','max:50'],
-            'email'    => ['required', 'email'],
-            'password' => ['required', 'string', 'min:6', 'max:20', 'same:password_confirmation'],
-        ]);
-        $this->validateFields($validator);
-
         try {
-            $user = $this->userService->createUser($request->only(['name', 'email', 'password']));
-        } catch (\Exception $e) {
-            $validator->after(function ($validator) use ($e) {
-                $validator->errors()->add(
-                    'error', $e->getMessage()
-                );
-            });
-        }
-        if ($validator->fails()) {
+            $user = $this->userService->createUser($request);
+        } catch (UserValidation $e) {
 
-            return $this->returnErrors($validator->errors());
+            return $this->returnValidationErors($e->getMessage());
+        } catch (Exception $e) {
+
+            return $this->returnErrors($e->getMessage());
         }
 
         return $this->returnSuccess($user);
     }
 
-    private function validateFields(object $validator): object {
-        if ($validator->fails()) {
+    private function returnValidationErors(string $errors): object {
 
-            return $this->returnErrors($validator->errors());
-        }
-
-        return $validator;
+        return response()->json([
+            'validationErrors' => $errors
+        ], 422);
     }
 
-    private function returnErrors(object $errors): object {
+    private function returnErrors(string $errors): object {
 
         return response()->json([
             'errors' => $errors

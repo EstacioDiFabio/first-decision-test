@@ -3,18 +3,29 @@
 namespace App\Services;
 
 use App\Repositories\UserRepository;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use App\Exceptions\UserValidation;
 
 class UserService {
+
     protected $userRepository;
 
     public function __construct(UserRepository $userRepository) {
         $this->userRepository = $userRepository;
     }
 
-    public function createUser(array $data) {
-        $data['password'] = Hash::make($data['password']);
+    public function createUser(Request $request) {
+        $validator = Validator::make($request->all(), [
+            'name'     => ['required', 'string', 'min:3','max:50'],
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'string', 'min:6', 'max:20', 'same:password_confirmation'],
+        ]);
+        if ($validator->fails()) {
 
-        return $this->userRepository->create($data);
+            throw new UserValidation($validator->errors());
+        }
+
+        return $this->userRepository->create($request->only(['name', 'email', 'password']));
     }
 }
