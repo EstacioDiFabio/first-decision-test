@@ -3,69 +3,88 @@
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <div class="bg-white p-8 rounded-lg shadow-md w-half max-w-md">
-        <h2 class="text-2xl font-bold mb-6 text-center">Cadastro de Usuário</h2>
+    <div class="flex flex-col gap-6 items-center">
+        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6 text-center">Cadastro de Usuário</h2>
 
-        @if(session('success'))
-            <div class="bg-green-100 text-green-700 p-2 rounded mb-4">
-                {{ session('success') }}
+            @if(session('success'))
+                <div class="bg-green-100 text-green-700 p-2 rounded mb-4">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if($errors->has('error'))
+                <div class="bg-red-100 text-red-700 p-2 rounded mb-4">
+                    {{ $errors->first('error') }}
+                </div>
+            @endif
+
+            <form id="form-submit"
+                action="{{ route('store') }}" method="POST"
+                class="space-y-4">
+                @csrf
+                <div>
+                    <label for="name">Nome</label>
+                    <input type="text" id="name" name="name" value="{{ old('name') }}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm @error('name') border-red-500 @enderror">
+                    @error('name')
+                        <span class="text-red-600 text-sm">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="email">E-mail</label>
+                    <input type="text" id="email" name="email" value="{{ old('email') }}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm @error('email') border-red-500 @enderror">
+                    @error('email')
+                        <span class="text-red-600 text-sm">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" name="password"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm @error('password') border-red-500 @enderror">
+                    @error('password')
+                        <span class="text-red-600 text-sm">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="password_confirmation">Confirmação de Senha</label>
+                    <input type="password" id="password_confirmation" name="password_confirmation"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-blue-500 text-black py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors">
+                    Cadastrar
+                </button>
+            </form>
+        </div>
+        <div id="tableData" style="display: none" class="bg-white p-8 rounded-lg shadow-md w-half max-w-md">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-sm font-medium text-slate-700 uppercase tracking-wider">ID</th>
+                            <th scope="col" class="px-6 py-3 text-left text-sm font-medium text-slate-700 uppercase tracking-wider">Nome</th>
+                            <th scope="col" class="px-6 py-3 text-left text-sm font-medium text-slate-700 uppercase tracking-wider">Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="bg-white">
+
+                    </tbody>
+                </table>
             </div>
-        @endif
-
-        @if($errors->has('error'))
-            <div class="bg-red-100 text-red-700 p-2 rounded mb-4">
-                {{ $errors->first('error') }}
-            </div>
-        @endif
-
-        <form id="form-submit"
-            action="{{ route('store') }}" method="POST"
-            class="space-y-4">
-            @csrf
-            <div>
-                <label for="name">Nome</label>
-                <input type="text" id="name" name="name" value="{{ old('name') }}"
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm @error('name') border-red-500 @enderror">
-                @error('name')
-                    <span class="text-red-600 text-sm">{{ $message }}</span>
-                @enderror
-            </div>
-
-            <div>
-                <label for="email">E-mail</label>
-                <input type="text" id="email" name="email" value="{{ old('email') }}"
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm @error('email') border-red-500 @enderror">
-                @error('email')
-                    <span class="text-red-600 text-sm">{{ $message }}</span>
-                @enderror
-            </div>
-
-            <div>
-                <label for="password">Senha</label>
-                <input type="password" id="password" name="password"
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm @error('password') border-red-500 @enderror">
-                @error('password')
-                    <span class="text-red-600 text-sm">{{ $message }}</span>
-                @enderror
-            </div>
-
-            <div>
-                <label for="password_confirmation">Confirmação de Senha</label>
-                <input type="password" id="password_confirmation" name="password_confirmation"
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-            </div>
-
-            <button type="submit"
-                    class="w-full bg-blue-500 text-black py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors">
-                Cadastrar
-            </button>
-        </form>
+        </div>
     </div>
 </div>
 <script>
 
 window.addEventListener('load', function() {
     (new Form()).init();
+    (new DataTable()).init();
 })
 
 /**
@@ -79,20 +98,6 @@ class Form {
         // remover os atributos action e method do <form> também
 
         // this.send();
-
-        // this.mock();
-    }
-
-    mock() {
-        var name = document.getElementById('name');
-        var email = document.getElementById('email');
-        var password = document.getElementById('password');
-        var password_confirmation = document.getElementById('password_confirmation');
-
-        name.value = (Math.random() + 1).toString(36).substring(7);
-        email.value = (Math.random() + 1).toString(36).substring(7)+'@firstdecision.com.br';
-        password.value = 'teste123';
-        password_confirmation.value = 'teste123';
     }
 
     send() {
@@ -236,5 +241,55 @@ class FormValidation {
 
 }
 
+class DataTable {
+
+    init() {
+        this.obtainData();
+    }
+
+    obtainData() {
+        fetch('/api/users', {
+            method: 'GET',
+        })
+        .then(async res => {
+
+            return await res.json();
+        })
+        .then(reqData => {
+            if (reqData.data.length > 0) {
+                this.createTable(reqData.data)
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+        });
+    }
+
+    createTable(usersData) {
+        var table = document.querySelector('#tableData').removeAttribute('style');
+        var tbody = document.getElementById('tableBody');
+
+        tbody.innerHTML = "";
+
+        usersData.forEach(user => {
+            var tr = document.createElement('tr');
+
+            tr.appendChild(this._createColumn(user.id));
+            tr.appendChild(this._createColumn(user.name));
+            tr.appendChild(this._createColumn(user.email));
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    _createColumn(data) {
+        var columnClasses = 'px-6 py-4 whitespace-nowrap text-sm text-slate-900'
+        let column = document.createElement('td');
+            column.className = columnClasses;
+            column.textContent = data;
+
+        return column;
+    }
+}
 </script>
 @endsection

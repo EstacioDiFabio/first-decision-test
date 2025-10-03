@@ -33,4 +33,18 @@ class UserController extends Controller {
 
         return $this->returnSuccess();
     }
+
+    /**
+     * @return object
+     */
+    public function obtain(): object {
+        try {
+            $users = $this->userService->obtainUsers();
+        } catch (Exception $e) {
+
+            return $this->returnErrors($e->getMessage());
+        }
+
+        return $this->returnSuccessData($users);
+    }
 }

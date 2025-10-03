@@ -25,4 +25,12 @@ class UserRepository {
 
         return $this->model->fill($data)->save();
     }
+
+    /**
+     * @return array
+     */
+    public function obtain(): array {
+
+        return $this->model->all()->toArray();
+    }
 }

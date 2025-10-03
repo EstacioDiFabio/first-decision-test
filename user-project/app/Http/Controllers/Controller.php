@@ -24,4 +24,11 @@ abstract class Controller
             'message' => 'Usuário criado com sucesso!'
         ], 201);
     }
+
+    protected function returnSuccessData($data) {
+
+        return response()->json([
+            'data' => $data
+        ]);
+    }
 }

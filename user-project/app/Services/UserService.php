@@ -34,4 +34,13 @@ class UserService {
 
         return $this->userRepository->create($request->only(['name', 'email', 'password']));
     }
+
+    /**
+     * Obtem todos os registros de usuarios
+     * @return array
+     */
+    public function obtainUsers(): array {
+
+        return $this->userRepository->obtain();
+    }
 }
