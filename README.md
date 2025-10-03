@@ -39,6 +39,13 @@ docker compose up
 #### Usando o client postgresql
 Caso tenha instalado o postgresql, apenas configure o arquivo `config/database.php`
 
+### Migration
+Execute o comando abaixo para rodar a migration do banco:
+
+```sh
+php artisan migrate
+```
+
 ### Iniciar a aplicação
 
 Suba o projeto através do composer 
